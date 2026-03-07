@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
 class AppTheme {
-  static const Color stone = Color(0xFFF9F6EE); // Brighter cream canvas
+  static const Color stone = Color(0xFFF9F6EE);
   static const Color forest = Color(
     0xFF1B2B38,
-  ); // Deep navy instead of muted forest
-  static const Color moss = Color(0xFF00C482); // Vivid neon green
-  static const Color earth = Color(0xFFFF6D37); // Punchy vibrant orange
-  static const Color sage = Color(0xFFFFD166); // Bright happy yellow
-
+  );
+  static const Color moss = Color(0xFF00C482);
+  static const Color earth = Color(0xFFFF6D37);
+  static const Color sage = Color(0xFFFFD166);
   static ThemeData get lightTheme {
     return ThemeData(
       scaffoldBackgroundColor: stone,
@@ -107,17 +105,14 @@ class AppTheme {
     );
   }
 }
-
 class OrganicBackground extends StatelessWidget {
   final Widget child;
   const OrganicBackground({super.key, required this.child});
-
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(child: CustomPaint(painter: _TopographicPainter())),
-        // Playful floating environmental elements
         const Positioned(
           top: 100,
           left: -20,
@@ -158,94 +153,52 @@ class OrganicBackground extends StatelessWidget {
             duration: 6000,
           ),
         ),
-        // Actual content
         Positioned.fill(child: child),
       ],
     );
   }
 }
-
 class OrganicBackgroundEnhanced extends StatelessWidget {
   final Widget child;
   const OrganicBackgroundEnhanced({super.key, required this.child});
-
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(child: CustomPaint(painter: _TopographicPainter())),
-        // Enhanced floating environmental elements with more variety
         const Positioned(
-          top: 60,
-          left: -20,
-          child: _FloatingIcon(
-            icon: Icons.eco_rounded,
-            size: 100,
+          top: -100,
+          left: -100,
+          child: _GlowingOrb(
+            size: 400,
             color: AppTheme.sage,
-            duration: 4000,
+            duration: 8000,
+            offsetX: 50,
+            offsetY: 30,
           ),
         ),
         const Positioned(
-          top: 150,
-          right: 10,
-          child: _FloatingIcon(
-            icon: Icons.water_drop_rounded,
-            size: 80,
+          bottom: -150,
+          right: -100,
+          child: _GlowingOrb(
+            size: 500,
             color: AppTheme.moss,
-            duration: 4800,
-          ),
-        ),
-        const Positioned(
-          bottom: 250,
-          right: -30,
-          child: _FloatingIcon(
-            icon: Icons.water_drop_rounded,
-            size: 120,
-            color: AppTheme.earth,
-            duration: 5500,
+            duration: 10000,
+            offsetX: -40,
+            offsetY: -60,
           ),
         ),
         const Positioned(
           top: 300,
-          right: 40,
-          child: _FloatingIcon(
-            icon: Icons.wb_sunny_rounded,
-            size: 80,
-            color: AppTheme.moss,
-            duration: 4500,
+          right: -150,
+          child: _GlowingOrb(
+            size: 450,
+            color: AppTheme.earth,
+            duration: 12000,
+            offsetX: -60,
+            offsetY: 50,
           ),
         ),
-        const Positioned(
-          bottom: 100,
-          left: 40,
-          child: _FloatingIcon(
-            icon: Icons.park_rounded,
-            size: 90,
-            color: AppTheme.forest,
-            duration: 6000,
-          ),
-        ),
-        const Positioned(
-          top: 500,
-          left: 20,
-          child: _FloatingIcon(
-            icon: Icons.favorite_rounded,
-            size: 70,
-            color: AppTheme.moss,
-            duration: 5200,
-          ),
-        ),
-        const Positioned(
-          bottom: 50,
-          right: 60,
-          child: _FloatingIcon(
-            icon: Icons.cloud_rounded,
-            size: 75,
-            color: AppTheme.sage,
-            duration: 6500,
-          ),
-        ),
-        // Decorative geometric shapes
         Positioned(
           top: 120,
           left: 30,
@@ -276,29 +229,69 @@ class OrganicBackgroundEnhanced extends StatelessWidget {
             shape: _ShapeType.circle,
           ),
         ),
-        // Actual content
         Positioned.fill(child: child),
       ],
     );
   }
 }
-
+class _GlowingOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  final int duration;
+  final double offsetX;
+  final double offsetY;
+  const _GlowingOrb({
+    required this.size,
+    required this.color,
+    required this.duration,
+    required this.offsetX,
+    required this.offsetY,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(0.15),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.1),
+                blurRadius: size / 2,
+                spreadRadius: size / 4,
+              ),
+            ],
+          ),
+        )
+        .animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .move(
+          duration: duration.ms,
+          curve: Curves.easeInOutSine,
+          begin: const Offset(0, 0),
+          end: Offset(offsetX, offsetY),
+        )
+        .scale(
+          duration: (duration * 1.2).toInt().ms,
+          curve: Curves.easeInOut,
+          begin: const Offset(1.0, 1.0),
+          end: const Offset(1.15, 1.15),
+        );
+  }
+}
 class _FloatingIcon extends StatelessWidget {
   final IconData icon;
   final double size;
   final Color color;
   final int duration;
-
   const _FloatingIcon({
     required this.icon,
     required this.size,
     required this.color,
     required this.duration,
   });
-
   @override
   Widget build(BuildContext context) {
-    // We can confidently use flutter_animate as it's already a project dependency.
     return Icon(icon, size: size, color: color.withOpacity(0.06))
         .animate(onPlay: (controller) => controller.repeat(reverse: true))
         .slideY(
@@ -315,19 +308,15 @@ class _FloatingIcon extends StatelessWidget {
         );
   }
 }
-
 enum _ShapeType { circle, square, triangle, diamond }
-
 class OrganicBackgroundSignUp extends StatelessWidget {
   final Widget child;
   const OrganicBackgroundSignUp({super.key, required this.child});
-
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(child: CustomPaint(painter: _TopographicPainter())),
-        // Enhanced floating environmental elements for signup
         const Positioned(
           top: 80,
           left: -10,
@@ -378,7 +367,6 @@ class OrganicBackgroundSignUp extends StatelessWidget {
             duration: 6100,
           ),
         ),
-        // Unique decorative shapes for signup
         Positioned(
           top: 150,
           right: 40,
@@ -419,30 +407,25 @@ class OrganicBackgroundSignUp extends StatelessWidget {
             shape: _ShapeType.square,
           ),
         ),
-        // Actual content
         Positioned.fill(child: child),
       ],
     );
   }
 }
-
 class _FloatingShape extends StatelessWidget {
   final double size;
   final Color color;
   final int duration;
   final _ShapeType shape;
-
   const _FloatingShape({
     required this.size,
     required this.color,
     required this.duration,
     required this.shape,
   });
-
   @override
   Widget build(BuildContext context) {
     Widget shapeWidget;
-
     switch (shape) {
       case _ShapeType.circle:
         shapeWidget = Container(
@@ -473,7 +456,6 @@ class _FloatingShape extends StatelessWidget {
           painter: _DiamondPainter(color: color),
         );
     }
-
     return shapeWidget
         .animate(onPlay: (controller) => controller.repeat(reverse: true))
         .slideY(
@@ -490,56 +472,43 @@ class _FloatingShape extends StatelessWidget {
         );
   }
 }
-
 class _TrianglePainter extends CustomPainter {
   final Color color;
-
   _TrianglePainter({required this.color});
-
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color.withOpacity(0.08)
       ..style = PaintingStyle.fill;
-
     final path = Path();
     path.moveTo(size.width / 2, 0);
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
     path.close();
-
     canvas.drawPath(path, paint);
   }
-
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
 class _DiamondPainter extends CustomPainter {
   final Color color;
-
   _DiamondPainter({required this.color});
-
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color.withOpacity(0.08)
       ..style = PaintingStyle.fill;
-
     final path = Path();
     path.moveTo(size.width / 2, 0);
     path.lineTo(size.width, size.height / 2);
     path.lineTo(size.width / 2, size.height);
     path.lineTo(0, size.height / 2);
     path.close();
-
     canvas.drawPath(path, paint);
   }
-
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
 class _TopographicPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -547,10 +516,7 @@ class _TopographicPainter extends CustomPainter {
       ..color = AppTheme.forest.withOpacity(0.04)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
-
-    // Draw organic topographic-style gentle curves
     final path = Path();
-
     for (int i = 0; i < 15; i++) {
       double offset = i * 40.0;
       path.moveTo(0, size.height * 0.3 + offset);
@@ -560,7 +526,6 @@ class _TopographicPainter extends CustomPainter {
         size.width,
         size.height * 0.4 + offset,
       );
-
       path.moveTo(0, size.height * 0.8 - offset);
       path.quadraticBezierTo(
         size.width * 0.6,
@@ -569,13 +534,9 @@ class _TopographicPainter extends CustomPainter {
         size.height * 0.7 - offset,
       );
     }
-
-    // Add subtle grain overlay effect
     final dotPaint = Paint()
       ..color = AppTheme.forest.withOpacity(0.02)
       ..style = PaintingStyle.fill;
-
-    // Create soft textured appearance by drawing tiny faint dots
     for (double x = 0; x < size.width; x += 12) {
       for (double y = 0; y < size.height; y += 12) {
         if ((x + y) % 5 == 0) {
@@ -583,10 +544,73 @@ class _TopographicPainter extends CustomPainter {
         }
       }
     }
-
     canvas.drawPath(path, paint);
   }
-
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+class AtmosphericParticleOverlay extends StatelessWidget {
+  final Color baseColor;
+  const AtmosphericParticleOverlay({super.key, required this.baseColor});
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Stack(
+        children: List.generate(12, (i) {
+          final xPos = (i * 137 % 100) / 100.0;
+          final yPos = (i * 251 % 100) / 100.0;
+          return Positioned(
+            left: xPos * MediaQuery.of(context).size.width,
+            top: yPos * MediaQuery.of(context).size.height,
+            child: _FloatingPoint(
+              color: baseColor,
+              duration: 5000 + (i * 450 % 4000),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+class _FloatingPoint extends StatelessWidget {
+  final Color color;
+  final int duration;
+  const _FloatingPoint({required this.color, required this.duration});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+          width: 5,
+          height: 5,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(0.4),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 6,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+        )
+        .animate(onPlay: (c) => c.repeat(reverse: true))
+        .moveY(
+          begin: 20,
+          end: -40,
+          duration: duration.ms,
+          curve: Curves.easeInOutSine,
+        )
+        .moveX(
+          begin: -15,
+          end: 15,
+          duration: (duration * 1.3).toInt().ms,
+          curve: Curves.easeInOutSine,
+        )
+        .scale(
+          begin: const Offset(0.5, 0.5),
+          end: const Offset(1.2, 1.2),
+          duration: duration.ms,
+        )
+        .fadeOut(duration: duration.ms);
+  }
 }

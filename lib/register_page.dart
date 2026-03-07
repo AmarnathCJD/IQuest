@@ -3,21 +3,17 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'theme.dart';
 import 'home_page.dart';
 import 'services/auth_service.dart';
-
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
-
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
-
 class _RegisterPageState extends State<RegisterPage> {
   final _authService = AuthService();
   final _fullnameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-
   @override
   void dispose() {
     _fullnameController.dispose();
@@ -25,43 +21,33 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     super.dispose();
   }
-
   Future<void> _handleSignUp() async {
     final fullname = _fullnameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-
-    // Validation
     if (fullname.isEmpty || email.isEmpty || password.isEmpty) {
       _showErrorDialog('Please fill in all fields.');
       return;
     }
-
     if (fullname.length < 2) {
       _showErrorDialog('Full name must be at least 2 characters long.');
       return;
     }
-
     if (!_isValidEmail(email)) {
       _showErrorDialog('Please enter a valid email address.');
       return;
     }
-
     if (password.length < 4) {
       _showErrorDialog('Password must be at least 4 characters long.');
       return;
     }
-
     setState(() => _isLoading = true);
-
     final result = await _authService.signup(
       fullname: fullname,
       email: email,
       password: password,
     );
-
     if (!mounted) return;
-
     if (result['success'] == true) {
       _showSuccessDialog('Account created! Welcome aboard! 🌱', () {
         Navigator.pushAndRemoveUntil(
@@ -82,12 +68,10 @@ class _RegisterPageState extends State<RegisterPage> {
       setState(() => _isLoading = false);
     }
   }
-
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     return emailRegex.hasMatch(email);
   }
-
   void _showErrorDialog(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -108,7 +92,6 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
   }
-
   void _showSuccessDialog(String message, VoidCallback onClose) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -130,7 +113,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
     Future.delayed(const Duration(seconds: 2), onClose);
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,9 +149,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   )
                   .animate(onPlay: (c) => c.repeat(reverse: true))
                   .rotate(begin: -0.05, end: 0.05, duration: 2.seconds),
-
               const SizedBox(height: 12),
-
               Text(
                     'Sow the\nfirst seed.',
                     style: Theme.of(context).textTheme.displayLarge,
@@ -177,9 +157,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   .animate()
                   .fadeIn(duration: 1500.ms, delay: 200.ms)
                   .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
-
               const SizedBox(height: 8),
-
               Text(
                     'Join our collective to shape sustainable solutions and impact the environment deeply.',
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -187,23 +165,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   .animate()
                   .fadeIn(duration: 1500.ms, delay: 400.ms)
                   .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
-
               const SizedBox(height: 24),
-
               TextField(
                 controller: _fullnameController,
                 decoration: const InputDecoration(labelText: 'Full Name'),
               ).animate().fadeIn(duration: 1000.ms, delay: 600.ms),
-
               const SizedBox(height: 12),
-
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email Address'),
               ).animate().fadeIn(duration: 1000.ms, delay: 750.ms),
-
               const SizedBox(height: 12),
-
               TextField(
                 controller: _passwordController,
                 obscureText: true,
@@ -211,9 +183,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   labelText: 'Secure Password (min 4 chars)',
                 ),
               ).animate().fadeIn(duration: 1000.ms, delay: 900.ms),
-
               const SizedBox(height: 24),
-
               Row(
                 children: [
                   Expanded(

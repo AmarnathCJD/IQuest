@@ -2,44 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
-
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
-
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
-
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _authService = AuthService();
   final _emailController = TextEditingController();
   bool _isLoading = false;
-
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
   }
-
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
-
     if (email.isEmpty) {
       _showErrorDialog('Please enter your email address.');
       return;
     }
-
     if (!_isValidEmail(email)) {
       _showErrorDialog('Please enter a valid email address.');
       return;
     }
-
     setState(() => _isLoading = true);
-
     final result = await _authService.forgotPassword(email: email);
-
     if (!mounted) return;
-
     if (result['success'] == true) {
       _showSuccessDialog(
         result['message'] ?? 'Password reset link has been sent to your email!',
@@ -52,12 +41,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       setState(() => _isLoading = false);
     }
   }
-
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     return emailRegex.hasMatch(email);
   }
-
   void _showErrorDialog(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -78,7 +65,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       ),
     );
   }
-
   void _showSuccessDialog(String message, VoidCallback onClose) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -100,7 +86,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
     Future.delayed(const Duration(seconds: 2), onClose);
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,9 +122,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   )
                   .animate(onPlay: (c) => c.repeat(reverse: true))
                   .rotate(begin: -0.05, end: 0.05, duration: 2.seconds),
-
               const SizedBox(height: 12),
-
               Text(
                     'Restore\naccess.',
                     style: Theme.of(context).textTheme.displayLarge,
@@ -147,9 +130,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   .animate()
                   .fadeIn(duration: 1500.ms, delay: 200.ms)
                   .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
-
               const SizedBox(height: 12),
-
               Text(
                     'We all stray from the path occasionally. We will help you find your way back.',
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -157,18 +138,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   .animate()
                   .fadeIn(duration: 1500.ms, delay: 400.ms)
                   .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
-
               const SizedBox(height: 24),
-
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
                   labelText: 'Account Email Address',
                 ),
               ).animate().fadeIn(duration: 1000.ms, delay: 600.ms),
-
               const SizedBox(height: 24),
-
               Row(
                 children: [
                   Expanded(

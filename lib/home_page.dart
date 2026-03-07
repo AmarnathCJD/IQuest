@@ -1,26 +1,15 @@
-// home_page.dart — Living Universe SDG Home Screen
-// A deep-space interactive universe where 60 orbiting planets represent the 17 UN SDGs.
-// Features: drag-to-rotate, pinch-to-zoom, tap-to-inspect, elastic collisions,
-// constellation connections between same-SDG planets.
-
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'theme.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SDG Data Model
-// ─────────────────────────────────────────────────────────────────────────────
-
 class SdgData {
   final int id;
   final String name;
   final String shortDescription;
   final Color color;
   final IconData icon;
-
   const SdgData({
     required this.id,
     required this.name,
@@ -29,7 +18,6 @@ class SdgData {
     required this.icon,
   });
 }
-
 const List<SdgData> kSdgs = [
   SdgData(
     id: 1,
@@ -167,32 +155,18 @@ const List<SdgData> kSdgs = [
     icon: Icons.handshake_rounded,
   ),
 ];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Planet Model (3-D position stored as spherical coords projected to 2-D)
-// ─────────────────────────────────────────────────────────────────────────────
-
 class Planet {
-  final int id; // unique id among all planets
+  final int id;
   final SdgData sdg;
-  double radius; // visual radius (px)
-
-  // Spherical position on the giant sphere surface (+ depth variance)
-  double theta; // polar angle  (0..π)
-  double phi; // azimuthal angle  (0..2π)
-  double depthOffset; // tiny Z variance within the shell
-
-  // Velocity in spherical coords (orbital drift)
+  double radius;
+  double theta;
+  double phi;
+  double depthOffset;
   double dTheta;
   double dPhi;
-
-  // Float offset for gentle organic movement
   double floatPhase;
   double floatAmplitude;
-
-  // Interaction state
   bool isHighlighted = false;
-
   Planet({
     required this.id,
     required this.sdg,
@@ -205,9 +179,6 @@ class Planet {
     required this.floatPhase,
     required this.floatAmplitude,
   });
-
-  /// 3-D Cartesian position on the big sphere of radius [R].
-  /// [rotX] and [rotY] are the user-dragged rotation angles.
   Offset project(
     double R,
     double rotX,
@@ -215,148 +186,98 @@ class Planet {
     double time,
     Size canvasSize,
   ) {
-    // Organic float perturbation
     final floatDelta = math.sin(time * 0.8 + floatPhase) * floatAmplitude;
-
     final effTheta = theta + floatDelta * 0.015;
     final effPhi = phi + floatDelta * 0.01;
-
-    // Cartesian on sphere
     double x = R * math.sin(effTheta) * math.cos(effPhi);
     double y = R * math.cos(effTheta);
     double z = R * math.sin(effTheta) * math.sin(effPhi);
-
-    // Apply user rotation (rotX around X-axis, rotY around Y-axis)
-    // Rotate around Y axis (horizontal drag)
     double cosY = math.cos(rotY), sinY = math.sin(rotY);
     double xR = x * cosY + z * sinY;
     double zR = -x * sinY + z * cosY;
     x = xR;
     z = zR;
-
-    // Rotate around X axis (vertical drag)
     double cosX = math.cos(rotX), sinX = math.sin(rotX);
     double yR = y * cosX - z * sinX;
     double zR2 = y * sinX + z * cosX;
     y = yR;
     z = zR2;
-
-    // Perspective projection
     double fov = 600;
     double scale = fov / (fov + z + depthOffset);
-
     double screenX = canvasSize.width / 2 + x * scale;
     double screenY = canvasSize.height / 2 + y * scale;
-
     return Offset(screenX, screenY);
   }
-
-  /// Apparent depth (Z after rotation) for sorting / sizing.
   double depth(double R, double rotX, double rotY, double time) {
     final floatDelta = math.sin(time * 0.8 + floatPhase) * floatAmplitude;
     final effTheta = theta + floatDelta * 0.015;
     final effPhi = phi + floatDelta * 0.01;
-
     double x = R * math.sin(effTheta) * math.cos(effPhi);
     double y = R * math.cos(effTheta);
     double z = R * math.sin(effTheta) * math.sin(effPhi);
-
     double cosY = math.cos(rotY), sinY = math.sin(rotY);
     double xR = x * cosY + z * sinY;
     double zR = -x * sinY + z * cosY;
     x = xR;
     z = zR;
-
     double cosX = math.cos(rotX), sinX = math.sin(rotX);
     double zR2 = y * sinX + z * cosX;
     z = zR2;
-
     return z + depthOffset;
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HomePage Widget
-// ─────────────────────────────────────────────────────────────────────────────
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _universeCtrl;
   late AnimationController _starCtrl;
-
-  // Rotation state
   double _rotX = 0.15;
   double _rotY = 0.0;
   double _lastRotX = 0.0;
   double _lastRotY = 0.0;
-
-  // Zoom state
   double _zoom = 1.0;
   double _lastZoom = 1.0;
-
-  // Planets
   final List<Planet> _planets = [];
   static const int kPlanetCount = 60;
-  static const double kSphereRadius = 130.0; // base sphere radius
-
-  // Tapped planet for modal
+  static const double kSphereRadius = 130.0;
   Planet? _tappedPlanet;
-
-  // Stars
   final List<Offset> _stars = [];
   final List<double> _starSizes = [];
   final math.Random _rng = math.Random(42);
-
   @override
   void initState() {
     super.initState();
-
     _universeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 60),
     )..repeat();
-
     _starCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 8),
     )..repeat(reverse: true);
-
     _initPlanets();
     _initStars();
   }
-
   void _initStars() {
     for (int i = 0; i < 200; i++) {
       _stars.add(Offset(_rng.nextDouble(), _rng.nextDouble()));
       _starSizes.add(_rng.nextDouble() * 2.2 + 0.3);
     }
   }
-
   void _initPlanets() {
-    // Distribute planets on a sphere surface using golden-angle spiral
-    // with improved spacing to reduce overlaps
     final goldenAngle = math.pi * (3 - math.sqrt(5));
     for (int i = 0; i < kPlanetCount; i++) {
       final sdg = kSdgs[i % kSdgs.length];
       final theta = math.acos(1 - 2 * (i + 0.5) / kPlanetCount);
       final phi = goldenAngle * i;
-
-      // Reduce orbital drift magnitude for more stable orbits
       final dPhi =
           (0.0015 + _rng.nextDouble() * 0.002) * (_rng.nextBool() ? 1 : -1);
       final dTheta =
           (0.0005 + _rng.nextDouble() * 0.001) * (_rng.nextBool() ? 1 : -1);
-
-      // Vary planet sizes based on SDG to reduce visual overlap
-      // Planets of same SDG are slightly different sizes for visual variety
       final sizeVariation = 7.0 + _rng.nextDouble() * 6.0;
-
       _planets.add(
         Planet(
           id: i,
@@ -364,30 +285,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           radius: sizeVariation,
           theta: theta,
           phi: phi,
-          depthOffset: (_rng.nextDouble() * 10 - 5), // Reduced depth variance
+          depthOffset: (_rng.nextDouble() * 10 - 5),
           dTheta: dTheta,
           dPhi: dPhi,
           floatPhase: _rng.nextDouble() * math.pi * 2,
-          floatAmplitude: 0.8 + _rng.nextDouble() * 1.2, // Smoother float motion
+          floatAmplitude: 0.8 + _rng.nextDouble() * 1.2,
         ),
       );
     }
   }
-
   @override
   void dispose() {
     _universeCtrl.dispose();
     _starCtrl.dispose();
     super.dispose();
   }
-
-  // ── Gesture Handlers ──────────────────────────────────────────────────────
-
   void _onPanStart(DragStartDetails d) {
     _lastRotX = _rotX;
     _lastRotY = _rotY;
   }
-
   void _onPanUpdate(DragUpdateDetails d) {
     setState(() {
       _rotY =
@@ -400,15 +316,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _lastRotY = _rotY;
     });
   }
-
   void _onScaleStart(ScaleStartDetails d) {
     _lastZoom = _zoom;
   }
-
   void _onScaleUpdate(ScaleUpdateDetails d) {
     setState(() {
       _zoom = (_lastZoom * d.scale).clamp(0.5, 3.0);
-      // Also handle rotation from scale gesture
       _rotY += d.focalPointDelta.dx * 0.005;
       _rotX = (_rotX - d.focalPointDelta.dy * 0.005).clamp(
         -math.pi / 2,
@@ -416,18 +329,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     });
   }
-
   void _onTapUp(TapUpDetails details) {
-    // Find nearest planet to tap point
     final t = _universeCtrl.value * 2 * math.pi;
     final size = context.size ?? const Size(400, 800);
     final effectiveR = kSphereRadius * _zoom;
-
     Planet? nearest;
-    double minDist = 40.0; // tap tolerance px
-
+    double minDist = 40.0;
     for (final p in _planets) {
-      // Update planet position loop
       final pos = p.project(effectiveR, _rotX, _rotY, t, size);
       final dist = (pos - details.localPosition).distance;
       if (dist < minDist) {
@@ -435,7 +343,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         nearest = p;
       }
     }
-
     if (nearest != null) {
       HapticFeedback.lightImpact();
       setState(() {
@@ -444,7 +351,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _showSdgModal(nearest.sdg);
     }
   }
-
   void _showSdgModal(SdgData sdg) {
     showModalBottomSheet(
       context: context,
@@ -457,14 +363,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       });
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF020B18),
       body: Stack(
         children: [
-          // ── Deep Space Background ─────────────────────────────────────────
           Positioned.fill(
             child: AnimatedBuilder(
               animation: _starCtrl,
@@ -477,8 +381,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
           ),
-
-          // ── Universe (planets + connections) ─────────────────────────────
           Positioned.fill(
             child: GestureDetector(
               onScaleStart: _onScaleStart,
@@ -488,7 +390,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 animation: _universeCtrl,
                 builder: (_, __) {
                   final t = _universeCtrl.value * 2 * math.pi;
-                  // Advance orbital motion
                   for (final p in _planets) {
                     p.phi += p.dPhi * 0.016;
                     p.theta = (p.theta + p.dTheta * 0.016).clamp(
@@ -511,8 +412,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
           ),
-
-          // ── Top Bar ───────────────────────────────────────────────────────
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -546,7 +445,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       .fadeIn(duration: 1200.ms)
                       .slideX(begin: -0.1, end: 0),
                   const Spacer(),
-                  // User avatar
                   Container(
                         width: 40,
                         height: 40,
@@ -575,8 +473,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
           ),
-
-          // ── Center hint label ─────────────────────────────────────────────
           Align(
             alignment: const Alignment(0, -0.55),
             child: Text(
@@ -589,16 +485,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
           ),
-
-          // ── Bottom "Explore Goals" button ─────────────────────────────────
           Align(
             alignment: const Alignment(0, 0.92),
             child: SafeArea(
               child: _ExploreButton(onTap: () => _showGoalsOverview(context)),
             ),
           ),
-
-          // ── Pinch hint ────────────────────────────────────────────────────
           Align(
             alignment: const Alignment(0, 0.75),
             child: Text(
@@ -615,7 +507,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-
   void _showGoalsOverview(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -625,60 +516,44 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Space Background Painter (stars + subtle nebula)
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _SpaceBackgroundPainter extends CustomPainter {
   final List<Offset> stars;
   final List<double> starSizes;
   final double twinkle;
-
   _SpaceBackgroundPainter({
     required this.stars,
     required this.starSizes,
     required this.twinkle,
   });
-
   @override
   void paint(Canvas canvas, Size size) {
-    // App-themed background (forest green with theme accents)
     final bgPaint = Paint()
       ..shader = const RadialGradient(
         center: Alignment(0.1, -0.2),
         radius: 1.3,
         colors: [
-          Color(0xFF1B3A3A), // Deep forest with hint of moss
-          Color(0xFF1B2B38), // App theme forest
-          Color(0xFF0D1820), // Dark navy
+          Color(0xFF1B3A3A),
+          Color(0xFF1B2B38),
+          Color(0xFF0D1820),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    // Subtle theme-colored glows
     final mossGlow = Paint()
       ..color = AppTheme.moss.withValues(alpha: 0.02)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 80);
     canvas.drawCircle(Offset(size.width * 0.2, size.height * 0.25), size.width * 0.55, mossGlow);
-
     final earthGlow = Paint()
       ..color = AppTheme.earth.withValues(alpha: 0.015)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 100);
     canvas.drawCircle(Offset(size.width * 0.8, size.height * 0.7), size.width * 0.5, earthGlow);
-
-    // Minimalist stars
     const double minStarOpacity = 0.2;
     for (int i = 0; i < stars.length; i++) {
       final twinkleFactor = 0.5 + 0.5 * math.sin(twinkle * math.pi * 2 + i * 0.7);
       final opacity = twinkleFactor * 0.7;
-
       if (opacity < minStarOpacity) continue;
-
       final starSize = starSizes[i] * 0.5;
       final starPaint = Paint()
         ..color = Colors.white.withValues(alpha: opacity);
-
       canvas.drawCircle(
         Offset(stars[i].dx * size.width, stars[i].dy * size.height),
         starSize,
@@ -686,15 +561,9 @@ class _SpaceBackgroundPainter extends CustomPainter {
       );
     }
   }
-
   @override
   bool shouldRepaint(_SpaceBackgroundPainter old) => old.twinkle != twinkle;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Universe Painter
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _UniversePainter extends CustomPainter {
   final List<Planet> planets;
   final double time;
@@ -702,7 +571,6 @@ class _UniversePainter extends CustomPainter {
   final double rotY;
   final double zoom;
   final int? highlightedId;
-
   _UniversePainter({
     required this.planets,
     required this.time,
@@ -711,23 +579,15 @@ class _UniversePainter extends CustomPainter {
     required this.zoom,
     this.highlightedId,
   });
-
   @override
   void paint(Canvas canvas, Size size) {
     final effectiveR = _HomePageState.kSphereRadius * zoom;
-
-    // Pre-compute projected positions & depths
     final List<(Planet, Offset, double)> projected = planets.map((p) {
       final pos = p.project(effectiveR, rotX, rotY, time, size);
       final d = p.depth(effectiveR, rotX, rotY, time);
       return (p, pos, d);
     }).toList();
-
-    // Sort back-to-front (painters algorithm)
     projected.sort((a, b) => a.$3.compareTo(b.$3));
-
-    // ── Draw constellation connections between same-SDG planets ──────────────
-    // Build index by SDG id & compute radiuses once
     final Map<int, List<(Planet, Offset, double, double)>> bySdg = {};
     for (final entry in projected) {
       final planet = entry.$1;
@@ -740,36 +600,24 @@ class _UniversePainter extends CustomPainter {
       bySdg.putIfAbsent(planet.sdg.id, () => [])
           .add((planet, pos, d, r));
     }
-
-    // Draw simple constellation connections between same-SDG planets
     const double maxConnectionDist = 350.0;
     const double minConnectionDist = 50.0;
-
     for (final group in bySdg.values) {
       if (group.length < 2) continue;
-
       final sdgColor = group[0].$1.sdg.color;
-
       for (int i = 0; i < group.length; i++) {
         for (int j = i + 1; j < group.length; j++) {
           final p1 = group[i];
           final p2 = group[j];
           final dist = (p1.$2 - p2.$2).distance;
-
           if (dist < minConnectionDist || dist > maxConnectionDist) continue;
-
-          // Simple distance-based opacity
           final distanceFactor = (1 - (dist - minConnectionDist) / (maxConnectionDist - minConnectionDist))
               .clamp(0.0, 1.0);
           final avgDepth = (p1.$3 + p2.$3) / 2;
           final depthFactor = ((avgDepth + effectiveR) / (effectiveR * 2))
               .clamp(0.0, 1.0);
-
           final lineOpacity = (distanceFactor * 0.35 * depthFactor).clamp(0.0, 0.35);
-
           if (lineOpacity < 0.05) continue;
-
-          // Single simple connection line
           final linePaint = Paint()
             ..color = sdgColor.withValues(alpha: lineOpacity)
             ..strokeWidth = 1.2;
@@ -777,22 +625,13 @@ class _UniversePainter extends CustomPainter {
         }
       }
     }
-
-    // ── Draw planets (back to front) ─────────────────────────────────────────
     final fov = 600.0;
-
     for (final (planet, pos, d) in projected) {
       final isHighlighted = planet.id == highlightedId;
       final depthFactor = ((d + effectiveR) / (effectiveR * 2)).clamp(0.2, 1.0);
-
-      // Scale planet by zoom + depth (perspective)
       final perspScale = fov / (fov + d);
       final r = planet.radius * perspScale * zoom * depthFactor.clamp(0.5, 1.0);
-
-      // Skip planets too small to render
       if (r < 1.5) continue;
-
-      // Outer glow (only render if depthFactor is significant)
       if (depthFactor > 0.25) {
         final glowOpacity = (0.15 * depthFactor).clamp(0.0, 1.0);
         final glowPaint = Paint()
@@ -800,11 +639,8 @@ class _UniversePainter extends CustomPainter {
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 1.2);
         canvas.drawCircle(pos, r * 1.8, glowPaint);
       }
-
-      // Planet base sphere (radial gradient)
       final highlightColor = Color.lerp(planet.sdg.color, Colors.white, 0.45)!;
       final darkColor = planet.sdg.color.darken(0.25);
-
       final gradPaint = Paint()
         ..shader = RadialGradient(
           center: const Alignment(-0.3, -0.4),
@@ -817,8 +653,6 @@ class _UniversePainter extends CustomPainter {
           stops: const [0.0, 0.5, 1.0],
         ).createShader(Rect.fromCircle(center: pos, radius: r));
       canvas.drawCircle(pos, r, gradPaint);
-
-      // Specular highlight (only for larger planets)
       if (r > 8) {
         final specOpacity = (0.35 * depthFactor).clamp(0.0, 1.0);
         final specPaint = Paint()
@@ -830,8 +664,6 @@ class _UniversePainter extends CustomPainter {
           specPaint,
         );
       }
-
-      // Highlight ring pulse if tapped
       if (isHighlighted) {
         final pulsePaint = Paint()
           ..color = Colors.white.withValues(alpha: 0.5)
@@ -844,8 +676,6 @@ class _UniversePainter extends CustomPainter {
           ..strokeWidth = 1;
         canvas.drawCircle(pos, r + 11, outerPulsePaint);
       }
-
-      // SDG number badge above the planet (only for visible planets)
       if (r > 11 && depthFactor > 0.45) {
         final label = '${planet.sdg.id}';
         final tp = TextPainter(
@@ -859,12 +689,9 @@ class _UniversePainter extends CustomPainter {
           ),
           textDirection: TextDirection.ltr,
         )..layout();
-
         tp.paint(canvas, pos - Offset(tp.width / 2, r + tp.height + 2));
       }
     }
-
-    // ── Central glow / core ───────────────────────────────────────────────────
     final coreGlowPaint = Paint()
       ..color = AppTheme.moss.withOpacity(0.06)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
@@ -874,7 +701,6 @@ class _UniversePainter extends CustomPainter {
       coreGlowPaint,
     );
   }
-
   @override
   bool shouldRepaint(_UniversePainter old) =>
       time != old.time ||
@@ -883,10 +709,6 @@ class _UniversePainter extends CustomPainter {
       zoom != old.zoom ||
       highlightedId != old.highlightedId;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Color extension — darken
-// ─────────────────────────────────────────────────────────────────────────────
 extension _ColorX on Color {
   Color darken(double amount) {
     final hsl = HSLColor.fromColor(this);
@@ -895,15 +717,9 @@ extension _ColorX on Color {
         .toColor();
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Explore Button
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _ExploreButton extends StatelessWidget {
   final VoidCallback onTap;
   const _ExploreButton({required this.onTap});
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -964,15 +780,9 @@ class _ExploreButton extends StatelessWidget {
         .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SDG Detail Bottom Sheet
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _SdgBottomSheet extends StatelessWidget {
   final SdgData sdg;
   const _SdgBottomSheet({required this.sdg});
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -992,7 +802,6 @@ class _SdgBottomSheet extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
               Container(
                 margin: const EdgeInsets.only(top: 12),
                 width: 40,
@@ -1002,13 +811,11 @@ class _SdgBottomSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // SDG badge row
                     Row(
                       children: [
                         Container(
@@ -1062,10 +869,7 @@ class _SdgBottomSheet extends StatelessWidget {
                         Icon(sdg.icon, color: sdg.color, size: 28),
                       ],
                     ),
-
                     const SizedBox(height: 20),
-
-                    // Divider
                     Container(
                       height: 1,
                       decoration: BoxDecoration(
@@ -1078,10 +882,7 @@ class _SdgBottomSheet extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // Description
                     Text(
                       sdg.shortDescription,
                       style: GoogleFonts.quicksand(
@@ -1091,10 +892,7 @@ class _SdgBottomSheet extends StatelessWidget {
                         height: 1.65,
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // Buttons
                     Row(
                       children: [
                         Expanded(
@@ -1134,14 +932,12 @@ class _SdgBottomSheet extends StatelessWidget {
         .fadeIn(duration: 300.ms);
   }
 }
-
 class _ModalButton extends StatelessWidget {
   final String label;
   final Color color;
   final IconData icon;
   final bool filled;
   final VoidCallback onTap;
-
   const _ModalButton({
     required this.label,
     required this.color,
@@ -1149,7 +945,6 @@ class _ModalButton extends StatelessWidget {
     required this.filled,
     required this.onTap,
   });
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -1181,14 +976,8 @@ class _ModalButton extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Goals Overview Sheet (all 17 SDGs as a scrollable list)
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _GoalsOverviewSheet extends StatelessWidget {
   const _GoalsOverviewSheet();
-
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -1257,11 +1046,9 @@ class _GoalsOverviewSheet extends StatelessWidget {
     );
   }
 }
-
 class _SdgListTile extends StatelessWidget {
   final SdgData sdg;
   const _SdgListTile({required this.sdg});
-
   @override
   Widget build(BuildContext context) {
     return Container(

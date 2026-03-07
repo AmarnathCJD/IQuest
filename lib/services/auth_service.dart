@@ -3,10 +3,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String _baseUrl = 'http://localhost:8080/api/auth';
+  static const String _baseUrl = 'https://id.gogram.fun/';
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
-
   Future<Map<String, dynamic>> signup({
     required String fullname,
     required String email,
@@ -22,7 +21,6 @@ class AuthService {
           'password': password,
         }),
       );
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         await _saveTokens(
@@ -50,12 +48,8 @@ class AuthService {
       final response = await http.post(
         Uri.parse('$_baseUrl/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode({'email': email, 'password': password}),
       );
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         await _saveTokens(
@@ -75,16 +69,13 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> forgotPassword({
-    required String email,
-  }) async {
+  Future<Map<String, dynamic>> forgotPassword({required String email}) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/forgot-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
       );
-
       if (response.statusCode == 200) {
         return {
           'success': true,
@@ -115,11 +106,11 @@ class AuthService {
           'new_password': newPassword,
         }),
       );
-
       if (response.statusCode == 200) {
         return {
           'success': true,
-          'message': 'Password reset successfully! Please login with your new password.',
+          'message':
+              'Password reset successfully! Please login with your new password.',
         };
       } else {
         return _handleError(response);
@@ -159,8 +150,6 @@ class AuthService {
     try {
       final errorData = jsonDecode(response.body);
       String errorMessage = errorData['error'] ?? 'An error occurred';
-
-      // Map specific error codes to user-friendly messages
       switch (response.statusCode) {
         case 400:
           if (errorMessage.contains('Email')) {
@@ -178,7 +167,6 @@ class AuthService {
             'success': false,
             'message': 'Please check your input and try again.',
           };
-
         case 401:
           if (errorMessage.contains('credentials')) {
             return {
@@ -195,26 +183,22 @@ class AuthService {
             'success': false,
             'message': 'Authentication failed. Please try again.',
           };
-
         case 404:
           return {
             'success': false,
             'message': 'No account found with that email address.',
           };
-
         case 409:
           return {
             'success': false,
             'message':
                 'This email is already registered. Please login or use a different email.',
           };
-
         case 500:
           return {
             'success': false,
             'message': 'Server error. Please try again later.',
           };
-
         default:
           return {
             'success': false,
