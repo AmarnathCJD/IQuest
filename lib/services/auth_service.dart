@@ -26,6 +26,7 @@ class AuthService {
         await _saveTokens(
           data['access_token'] ?? '',
           data['refresh_token'] ?? '',
+          data['user']['id'] ?? 0,
         );
         return {'success': true, 'message': 'Account created successfully!'};
       } else {
@@ -55,6 +56,7 @@ class AuthService {
         await _saveTokens(
           data['access_token'] ?? '',
           data['refresh_token'] ?? '',
+          data['user']['id'] ?? 0,
         );
         return {'success': true, 'message': 'Login successful!'};
       } else {
@@ -140,10 +142,22 @@ class AuthService {
     return token != null && token.isNotEmpty;
   }
 
-  Future<void> _saveTokens(String accessToken, String refreshToken) async {
+  static const String _userIdKey = 'user_id';
+
+  Future<void> _saveTokens(
+    String accessToken,
+    String refreshToken,
+    int userId,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_accessTokenKey, accessToken);
     await prefs.setString(_refreshTokenKey, refreshToken);
+    await prefs.setInt(_userIdKey, userId);
+  }
+
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_userIdKey);
   }
 
   Map<String, dynamic> _handleError(http.Response response) {

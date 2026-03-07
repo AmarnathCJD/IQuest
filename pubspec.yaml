@@ -50,6 +50,8 @@ dependencies:
   archive: ^4.0.0
   sherpa_onnx: ^1.10.43
   video_player: ^2.8.7
+  web_socket_channel: ^3.0.3
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_test:

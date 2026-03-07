@@ -6,8 +6,11 @@ import 'package:video_player/video_player.dart';
 import 'theme.dart';
 import 'widgets/talking_character.dart';
 import 'services/game_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'models/game_model.dart';
 import 'character_selection_page.dart';
+import 'multiplayer_entry_page.dart';
+import 'realworld_entry_page.dart';
 import 'dart:ui';
 
 class GamePage extends StatefulWidget {
@@ -70,12 +73,13 @@ class _GamePageState extends State<GamePage>
 
     _fetchGameData();
     _playIntroAudio();
-    _initVideoBackground();
   }
 
   Future<void> _initVideoBackground() async {
+    if (_gameData == null || _gameData!.bgVid.isEmpty) return;
+
     _videoController = VideoPlayerController.networkUrl(
-      Uri.parse('https://id.gogram.fun/assets/video/ok.mp4'),
+      Uri.parse(_gameData!.bgVid),
     );
 
     try {
@@ -94,12 +98,14 @@ class _GamePageState extends State<GamePage>
   }
 
   Future<void> _fetchGameData() async {
-    final data = await _gameService.getGame('stratopolis');
+    final data = await _gameService.getGame('zero_hunger');
     if (mounted) {
       setState(() {
         _gameData = data;
         _isLoading = false;
       });
+      // Initialize video only after data is ready
+      _initVideoBackground();
     }
   }
 
@@ -258,7 +264,7 @@ class _GamePageState extends State<GamePage>
                           alignment: Alignment.bottomRight,
                           children: [
                             Container(
-                              height: 150,
+                              height: 120, // Reduced from 150
                               width: double.infinity,
                               child: _animationController == null
                                   ? const Center(
@@ -286,7 +292,7 @@ class _GamePageState extends State<GamePage>
                                     ),
                             ),
                             Positioned(
-                              bottom: 0,
+                              bottom: -4, // Tighter positioning
                               right: MediaQuery.of(context).size.width * 0.15,
                               child:
                                   IconButton(
@@ -320,6 +326,7 @@ class _GamePageState extends State<GamePage>
                                       .displayLarge
                                       ?.copyWith(
                                         color: Colors.white,
+                                        fontSize: 28, // Reduced from default
                                         shadows: [
                                           Shadow(
                                             color: Colors.black.withOpacity(
@@ -344,7 +351,7 @@ class _GamePageState extends State<GamePage>
                                   '${game.tagline}\nEradicating poverty in all its forms everywhere.',
                                   style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(
-                                        fontSize: 20,
+                                        fontSize: 16, // Reduced from 20
                                         color: Colors.white.withOpacity(0.9),
                                       ),
                                 )
@@ -359,10 +366,14 @@ class _GamePageState extends State<GamePage>
                             const SizedBox(height: 24),
 
                             Container(
-                                  padding: const EdgeInsets.all(20),
+                                  padding: const EdgeInsets.all(
+                                    16,
+                                  ), // Reduced from 20
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.7),
-                                    borderRadius: BorderRadius.circular(24),
+                                    borderRadius: BorderRadius.circular(
+                                      20,
+                                    ), // Slightly smaller radius
                                     border: Border.all(
                                       color: AppTheme.forest.withOpacity(0.05),
                                     ),
@@ -398,10 +409,10 @@ class _GamePageState extends State<GamePage>
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 12),
+                                      const SizedBox(height: 8),
                                       Container(
                                         constraints: const BoxConstraints(
-                                          maxHeight: 120, // Limit height
+                                          maxHeight: 100, // Reduced from 120
                                         ),
                                         child: SingleChildScrollView(
                                           physics:
@@ -437,8 +448,7 @@ class _GamePageState extends State<GamePage>
                                   child:
                                       ElevatedButton(
                                         onPressed: () {
-                                          _audioPlayer
-                                              .pause(); // Pause intro music
+                                          _audioPlayer.pause();
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
@@ -454,14 +464,109 @@ class _GamePageState extends State<GamePage>
                                         },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: AppTheme.earth,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
                                         ),
-                                        child: const Text('BEGIN QUEST'),
+                                        child: const Text(
+                                          'SOLO QUEST',
+                                          style: TextStyle(
+                                            letterSpacing: 1,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ).animate().fadeIn(
-                                        duration: 1000.ms,
-                                        delay: 800.ms,
+                                        duration: 800.ms,
+                                        delay: 400.ms,
+                                      ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child:
+                                      OutlinedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const MultiplayerEntryPage(),
+                                            ),
+                                          );
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          side: const BorderSide(
+                                            color: AppTheme.earth,
+                                            width: 2,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'MULTIPLAYER',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            letterSpacing: 1,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ).animate().fadeIn(
+                                        duration: 800.ms,
+                                        delay: 600.ms,
                                       ),
                                 ),
                               ],
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const RealworldEntryPage(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.sage.withOpacity(0.1),
+                                foregroundColor: AppTheme.sage,
+                                side: const BorderSide(
+                                  color: AppTheme.sage,
+                                  width: 2,
+                                ),
+                                minimumSize: const Size(double.infinity, 56),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.public, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'REALWORLD MODE',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ).animate().fadeIn(
+                              duration: 800.ms,
+                              delay: 1000.ms,
                             ),
                             const SizedBox(height: 24),
                           ],

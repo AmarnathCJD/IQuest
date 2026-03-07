@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'theme.dart';
+
 class SdgData {
   final int id;
   final String name;
@@ -18,6 +19,7 @@ class SdgData {
     required this.icon,
   });
 }
+
 const List<SdgData> kSdgs = [
   SdgData(
     id: 1,
@@ -155,6 +157,7 @@ const List<SdgData> kSdgs = [
     icon: Icons.handshake_rounded,
   ),
 ];
+
 class Planet {
   final int id;
   final SdgData sdg;
@@ -208,6 +211,7 @@ class Planet {
     double screenY = canvasSize.height / 2 + y * scale;
     return Offset(screenX, screenY);
   }
+
   double depth(double R, double rotX, double rotY, double time) {
     final floatDelta = math.sin(time * 0.8 + floatPhase) * floatAmplitude;
     final effTheta = theta + floatDelta * 0.015;
@@ -226,11 +230,13 @@ class Planet {
     return z + depthOffset;
   }
 }
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
   State<HomePage> createState() => _HomePageState();
 }
+
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late AnimationController _universeCtrl;
   late AnimationController _starCtrl;
@@ -261,12 +267,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _initPlanets();
     _initStars();
   }
+
   void _initStars() {
     for (int i = 0; i < 200; i++) {
       _stars.add(Offset(_rng.nextDouble(), _rng.nextDouble()));
       _starSizes.add(_rng.nextDouble() * 2.2 + 0.3);
     }
   }
+
   void _initPlanets() {
     final goldenAngle = math.pi * (3 - math.sqrt(5));
     for (int i = 0; i < kPlanetCount; i++) {
@@ -294,31 +302,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     }
   }
+
   @override
   void dispose() {
     _universeCtrl.dispose();
     _starCtrl.dispose();
     super.dispose();
   }
-  void _onPanStart(DragStartDetails d) {
-    _lastRotX = _rotX;
-    _lastRotY = _rotY;
-  }
-  void _onPanUpdate(DragUpdateDetails d) {
-    setState(() {
-      _rotY =
-          _lastRotY +
-          d.globalPosition.dx * 0.003 -
-          d.localPosition.dx * 0.003 +
-          d.delta.dx * 0.008;
-      _rotX = (_lastRotX - d.delta.dy * 0.008).clamp(-math.pi / 2, math.pi / 2);
-      _lastRotX = _rotX;
-      _lastRotY = _rotY;
-    });
-  }
+
   void _onScaleStart(ScaleStartDetails d) {
     _lastZoom = _zoom;
   }
+
   void _onScaleUpdate(ScaleUpdateDetails d) {
     setState(() {
       _zoom = (_lastZoom * d.scale).clamp(0.5, 3.0);
@@ -329,6 +324,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       );
     });
   }
+
   void _onTapUp(TapUpDetails details) {
     final t = _universeCtrl.value * 2 * math.pi;
     final size = context.size ?? const Size(400, 800);
@@ -351,6 +347,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _showSdgModal(nearest.sdg);
     }
   }
+
   void _showSdgModal(SdgData sdg) {
     showModalBottomSheet(
       context: context,
@@ -363,6 +360,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       });
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -507,6 +505,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
+
   void _showGoalsOverview(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -516,6 +515,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 }
+
 class _SpaceBackgroundPainter extends CustomPainter {
   final List<Offset> stars;
   final List<double> starSizes;
@@ -531,24 +531,29 @@ class _SpaceBackgroundPainter extends CustomPainter {
       ..shader = const RadialGradient(
         center: Alignment(0.1, -0.2),
         radius: 1.3,
-        colors: [
-          Color(0xFF1B3A3A),
-          Color(0xFF1B2B38),
-          Color(0xFF0D1820),
-        ],
+        colors: [Color(0xFF1B3A3A), Color(0xFF1B2B38), Color(0xFF0D1820)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
     final mossGlow = Paint()
       ..color = AppTheme.moss.withValues(alpha: 0.02)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 80);
-    canvas.drawCircle(Offset(size.width * 0.2, size.height * 0.25), size.width * 0.55, mossGlow);
+    canvas.drawCircle(
+      Offset(size.width * 0.2, size.height * 0.25),
+      size.width * 0.55,
+      mossGlow,
+    );
     final earthGlow = Paint()
       ..color = AppTheme.earth.withValues(alpha: 0.015)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 100);
-    canvas.drawCircle(Offset(size.width * 0.8, size.height * 0.7), size.width * 0.5, earthGlow);
+    canvas.drawCircle(
+      Offset(size.width * 0.8, size.height * 0.7),
+      size.width * 0.5,
+      earthGlow,
+    );
     const double minStarOpacity = 0.2;
     for (int i = 0; i < stars.length; i++) {
-      final twinkleFactor = 0.5 + 0.5 * math.sin(twinkle * math.pi * 2 + i * 0.7);
+      final twinkleFactor =
+          0.5 + 0.5 * math.sin(twinkle * math.pi * 2 + i * 0.7);
       final opacity = twinkleFactor * 0.7;
       if (opacity < minStarOpacity) continue;
       final starSize = starSizes[i] * 0.5;
@@ -561,9 +566,11 @@ class _SpaceBackgroundPainter extends CustomPainter {
       );
     }
   }
+
   @override
   bool shouldRepaint(_SpaceBackgroundPainter old) => old.twinkle != twinkle;
 }
+
 class _UniversePainter extends CustomPainter {
   final List<Planet> planets;
   final double time;
@@ -597,8 +604,7 @@ class _UniversePainter extends CustomPainter {
       final fov = 600.0;
       final perspScale = fov / (fov + d);
       final r = planet.radius * perspScale * zoom * depthFactor.clamp(0.5, 1.0);
-      bySdg.putIfAbsent(planet.sdg.id, () => [])
-          .add((planet, pos, d, r));
+      bySdg.putIfAbsent(planet.sdg.id, () => []).add((planet, pos, d, r));
     }
     const double maxConnectionDist = 350.0;
     const double minConnectionDist = 50.0;
@@ -611,12 +617,18 @@ class _UniversePainter extends CustomPainter {
           final p2 = group[j];
           final dist = (p1.$2 - p2.$2).distance;
           if (dist < minConnectionDist || dist > maxConnectionDist) continue;
-          final distanceFactor = (1 - (dist - minConnectionDist) / (maxConnectionDist - minConnectionDist))
-              .clamp(0.0, 1.0);
+          final distanceFactor =
+              (1 -
+                      (dist - minConnectionDist) /
+                          (maxConnectionDist - minConnectionDist))
+                  .clamp(0.0, 1.0);
           final avgDepth = (p1.$3 + p2.$3) / 2;
           final depthFactor = ((avgDepth + effectiveR) / (effectiveR * 2))
               .clamp(0.0, 1.0);
-          final lineOpacity = (distanceFactor * 0.35 * depthFactor).clamp(0.0, 0.35);
+          final lineOpacity = (distanceFactor * 0.35 * depthFactor).clamp(
+            0.0,
+            0.35,
+          );
           if (lineOpacity < 0.05) continue;
           final linePaint = Paint()
             ..color = sdgColor.withValues(alpha: lineOpacity)
@@ -701,6 +713,7 @@ class _UniversePainter extends CustomPainter {
       coreGlowPaint,
     );
   }
+
   @override
   bool shouldRepaint(_UniversePainter old) =>
       time != old.time ||
@@ -709,6 +722,7 @@ class _UniversePainter extends CustomPainter {
       zoom != old.zoom ||
       highlightedId != old.highlightedId;
 }
+
 extension _ColorX on Color {
   Color darken(double amount) {
     final hsl = HSLColor.fromColor(this);
@@ -717,6 +731,7 @@ extension _ColorX on Color {
         .toColor();
   }
 }
+
 class _ExploreButton extends StatelessWidget {
   final VoidCallback onTap;
   const _ExploreButton({required this.onTap});
@@ -780,6 +795,7 @@ class _ExploreButton extends StatelessWidget {
         .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
   }
 }
+
 class _SdgBottomSheet extends StatelessWidget {
   final SdgData sdg;
   const _SdgBottomSheet({required this.sdg});
@@ -932,6 +948,7 @@ class _SdgBottomSheet extends StatelessWidget {
         .fadeIn(duration: 300.ms);
   }
 }
+
 class _ModalButton extends StatelessWidget {
   final String label;
   final Color color;
@@ -976,6 +993,7 @@ class _ModalButton extends StatelessWidget {
     );
   }
 }
+
 class _GoalsOverviewSheet extends StatelessWidget {
   const _GoalsOverviewSheet();
   @override
@@ -1046,6 +1064,7 @@ class _GoalsOverviewSheet extends StatelessWidget {
     );
   }
 }
+
 class _SdgListTile extends StatelessWidget {
   final SdgData sdg;
   const _SdgListTile({required this.sdg});

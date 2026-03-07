@@ -54,104 +54,74 @@ class _CharacterSelectionPageState extends State<CharacterSelectionPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Background Image
+          // 1. Dynamic Immersive Background
           Positioned.fill(
-            child: Image.asset('assets/char.jpg', fit: BoxFit.cover),
-          ),
-          // Blur Effect
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(color: Colors.black.withOpacity(0.35)),
+            child: AnimatedSwitcher(
+              duration: 1200.ms,
+              switchInCurve: Curves.easeIn,
+              switchOutCurve: Curves.easeOut,
+              child: Image.network(
+                'https://id.gogram.fun${widget.characters[_selectedIndex].avatarUrl}',
+                key: ValueKey(_selectedIndex),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Image.asset('assets/char.jpg', fit: BoxFit.cover),
+              ),
             ),
           ),
+
+          // 2. Cinematic Overlays & Glows
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.7),
+                    Colors.black.withOpacity(0.1),
+                    Colors.black.withOpacity(0.95),
+                  ],
+                  stops: const [0.0, 0.45, 0.95],
+                ),
+              ),
+            ),
+          ),
+
+          // Side ambient glow
+          Positioned(
+            right: -150,
+            bottom: 100,
+            child:
+                Container(
+                      width: 400,
+                      height: 400,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppTheme.earth.withOpacity(0.1),
+                      ),
+                    )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.3, 1.3),
+                      duration: 5.seconds,
+                    )
+                    .blur(
+                      begin: const Offset(60, 60),
+                      end: const Offset(100, 100),
+                    ),
+          ),
+
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 20.0,
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'SELECT ARCHETYPE',
-                          style: GoogleFonts.quicksand(
-                            color: Colors.white.withOpacity(0.8),
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.bolt_rounded,
-                              color: _realismMode
-                                  ? AppTheme.earth
-                                  : AppTheme.sage,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'REALISM',
-                              style: GoogleFonts.quicksand(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 9,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            Transform.scale(
-                              scale: 0.7,
-                              child: Switch(
-                                value: _realismMode,
-                                activeColor: AppTheme.earth,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                                onChanged: (val) {
-                                  setState(() {
-                                    _realismMode = val;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
+                _buildHeader(),
+
                 Expanded(
                   child: PageView.builder(
                     controller: _pageController,
@@ -165,326 +135,338 @@ class _CharacterSelectionPageState extends State<CharacterSelectionPage>
                       final isSelected = _selectedIndex == index;
                       final depthOffset = (index - _pageOffset);
 
-                      return AnimatedContainer(
-                        duration: 400.ms,
-                        curve: Curves.easeOutCubic,
-                        margin: EdgeInsets.only(
-                          top: isSelected ? 0 : 40,
-                          bottom: isSelected ? 0 : 40,
-                          left: 10,
-                          right: 10,
-                        ),
-                        child: SingleChildScrollView(
-                          clipBehavior: Clip.none,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Character Name (Top)
-                              if (isSelected)
-                                Transform.translate(
-                                  offset: Offset(depthOffset * -40, 0),
-                                  child:
-                                      Text(
-                                            character.name,
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.outfit(
-                                              color: Colors.white,
-                                              fontSize: 38,
-                                              fontWeight: FontWeight.w900,
-                                              height: 1.1,
-                                              letterSpacing: -1,
-                                            ),
-                                          )
-                                          .animate()
-                                          .fadeIn(duration: 400.ms)
-                                          .slideY(begin: 0.2, end: 0),
-                                )
-                              else
-                                const SizedBox(height: 42),
-
-                              const SizedBox(height: 32),
-
-                              // Avatar + Aura effect
-                              SizedBox(
-                                height: 280,
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    // Pulsing ambient aura
-                                    if (isSelected)
-                                      AnimatedBuilder(
-                                        animation: _breathingController,
-                                        builder: (context, child) {
-                                          return Transform.scale(
-                                            scale:
-                                                1.0 +
-                                                (_breathingController.value *
-                                                    0.15),
-                                            child: Container(
-                                              width: 240,
-                                              height: 240,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                gradient: RadialGradient(
-                                                  colors: [
-                                                    AppTheme.sage.withOpacity(
-                                                      0.3,
-                                                    ),
-                                                    AppTheme.moss.withOpacity(
-                                                      0.05,
-                                                    ),
-                                                    Colors.transparent,
-                                                  ],
-                                                  stops: const [0.3, 0.7, 1.0],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-
-                                    // Main Circular Profile
-                                    Transform.translate(
-                                      offset: Offset(depthOffset * 60, 0),
-                                      child: AnimatedScale(
-                                        duration: 600.ms,
-                                        scale: isSelected ? 1.0 : 0.85,
-                                        curve: Curves.easeOutBack,
-                                        child: AnimatedContainer(
-                                          duration: 400.ms,
-                                          width: 240,
-                                          height: 320,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              36,
-                                            ),
-                                            color: Colors.white,
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? Colors.white
-                                                  : Colors.white.withOpacity(
-                                                      0.4,
-                                                    ),
-                                              width: isSelected ? 4 : 2,
-                                            ),
-                                            boxShadow: isSelected
-                                                ? [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withOpacity(0.3),
-                                                      blurRadius: 30,
-                                                      offset: const Offset(
-                                                        0,
-                                                        15,
-                                                      ),
-                                                    ),
-                                                  ]
-                                                : [],
-                                          ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              32,
-                                            ),
-                                            child: ColorFiltered(
-                                              colorFilter: ColorFilter.mode(
-                                                Colors.black.withOpacity(
-                                                  isSelected ? 0 : 0.5,
-                                                ), // Grayscale effect when not selected
-                                                BlendMode.saturation,
-                                              ),
-                                              child: Image.network(
-                                                'https://id.gogram.fun${character.avatarUrl}',
-                                                fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (
-                                                      context,
-                                                      error,
-                                                      stackTrace,
-                                                    ) => Container(
-                                                      color: AppTheme.sage
-                                                          .withOpacity(0.2),
-                                                      child: const Icon(
-                                                        Icons.person,
-                                                        size: 80,
-                                                        color: AppTheme.forest,
-                                                      ),
-                                                    ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-
-                                    // Slick archetypes badge overlapping bottom
-                                    if (isSelected)
-                                      Positioned(
-                                        bottom: 0,
-                                        child: Transform.translate(
-                                          offset: Offset(depthOffset * 100, 0),
-                                          child:
-                                              Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 20,
-                                                          vertical: 8,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      gradient:
-                                                          const LinearGradient(
-                                                            colors: [
-                                                              AppTheme.earth,
-                                                              Color(0xFFE67E22),
-                                                            ],
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            24,
-                                                          ),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: AppTheme.earth
-                                                              .withOpacity(0.4),
-                                                          blurRadius: 12,
-                                                          offset: const Offset(
-                                                            0,
-                                                            4,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    child: Text(
-                                                      character.tagline
-                                                          .toUpperCase(),
-                                                      style:
-                                                          GoogleFonts.quicksand(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.w900,
-                                                            fontSize: 12,
-                                                            letterSpacing: 2,
-                                                          ),
-                                                    ),
-                                                  )
-                                                  .animate()
-                                                  .fadeIn(delay: 200.ms)
-                                                  .slideY(begin: 0.5, end: 0),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              // Description
-                              if (isSelected)
-                                Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 18,
-                                        vertical: 12,
-                                      ),
-                                      constraints: const BoxConstraints(
-                                        maxWidth: 320,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.35),
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: Colors.white.withOpacity(0.2),
-                                          width: 1.5,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.1,
-                                            ),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Text(
-                                        character.description,
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.inter(
-                                          color: Colors.white.withOpacity(0.9),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.4,
-                                        ),
-                                      ),
-                                    )
-                                    .animate()
-                                    .fadeIn(duration: 400.ms)
-                                    .slideY(begin: 0.1, end: 0)
-                              else
-                                const SizedBox(height: 120),
-                            ],
-                          ),
-                        ),
+                      return _buildCharacterSlide(
+                        character,
+                        isSelected,
+                        depthOffset,
                       );
                     },
                   ),
                 ),
 
-                // Action Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 40.0,
-                    vertical: 16,
-                  ),
-                  child:
-                      ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => StoryPage(
-                                    gameId: widget.gameId,
-                                    character:
-                                        widget.characters[_selectedIndex],
-                                    realismMode: _realismMode,
-                                  ),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: AppTheme.forest,
-                              minimumSize: const Size(double.infinity, 64),
-                              elevation: 10,
-                              shadowColor: Colors.black.withOpacity(0.3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(32),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'EMBRACE DESTINY',
-                                  style: GoogleFonts.quicksand(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 20,
-                                ),
-                              ],
-                            ),
-                          )
-                          .animate(onPlay: (c) => c.repeat(reverse: true))
-                          .shimmer(color: Colors.black12, duration: 2.seconds)
-                          .then(delay: 1.seconds),
-                ),
+                _buildActionButton(),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ).animate().fadeIn().scale(),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'SELECT ARCHETYPE',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 4,
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  'WHO WILL YOU BE?',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.2, end: 0),
+          ),
+          _buildRealismToggle(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRealismToggle() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.bolt_rounded,
+            color: _realismMode ? AppTheme.earth : AppTheme.sage,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'REALISM',
+            style: GoogleFonts.quicksand(
+              fontWeight: FontWeight.w800,
+              fontSize: 10,
+              color: Colors.white,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Transform.scale(
+            scale: 0.8,
+            child: Switch(
+              value: _realismMode,
+              activeColor: AppTheme.earth,
+              onChanged: (val) => setState(() => _realismMode = val),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCharacterSlide(
+    GameCharacter character,
+    bool isSelected,
+    double depthOffset,
+  ) {
+    return AnimatedContainer(
+      duration: 600.ms,
+      curve: Curves.easeOutCubic,
+      margin: EdgeInsets.only(
+        top: isSelected ? 20 : 60,
+        bottom: isSelected ? 40 : 80,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 1. Large immersive portrait
+          Expanded(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Glowing Aura for selected
+                if (isSelected)
+                  Container(
+                        width: 280,
+                        height: 450,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(40),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.earth.withOpacity(0.3),
+                              blurRadius: 40,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(
+                        begin: const Offset(1, 1),
+                        end: const Offset(1.05, 1.05),
+                        duration: 3.seconds,
+                      ),
+
+                // Main Image Container - No width limit (expanded width)
+                Transform.translate(
+                  offset: Offset(depthOffset * 100, 0),
+                  child: AnimatedContainer(
+                    duration: 500.ms,
+                    width: isSelected ? 300 : 220,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(
+                        color: isSelected ? Colors.white : Colors.white24,
+                        width: isSelected ? 2 : 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(38),
+                      child: Image.network(
+                        'https://id.gogram.fun${character.avatarUrl}',
+                        fit: BoxFit.cover,
+                        alignment: const Alignment(
+                          0,
+                          -0.7,
+                        ), // Focus slightly above center to capture the head
+                        height: double.infinity,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Tagline Badge overlap
+                if (isSelected)
+                  Positioned(
+                    bottom: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.earth,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black45,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        character.tagline.toUpperCase(),
+                        style: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ).animate().fadeIn().slideY(begin: 0.5, end: 0),
+                  ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 2. Info Section
+          if (isSelected)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  Text(
+                    character.name.toUpperCase(),
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 42,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                      height: 1,
+                    ),
+                  ).animate().fadeIn().slideY(begin: 0.2, end: 0),
+                  const SizedBox(height: 12),
+                  Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white10),
+                        ),
+                        child: Text(
+                          character.description,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.quicksand(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            height: 1.5,
+                          ),
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(delay: 200.ms)
+                      .scale(
+                        begin: const Offset(0.95, 0.95),
+                        end: const Offset(1, 1),
+                      ),
+                ],
+              ),
+            )
+          else
+            const SizedBox(height: 120),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton() {
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        children: [
+          Container(
+                height: 64,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(32),
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.earth, Color(0xFFD35400)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.earth.withOpacity(0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(32),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StoryPage(
+                            gameId: widget.gameId,
+                            character: widget.characters[_selectedIndex],
+                            realismMode: _realismMode,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'EMBRACE DESTINY',
+                            style: GoogleFonts.outfit(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Icon(
+                            Icons.auto_awesome,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .shimmer(color: Colors.white24, duration: 2.seconds),
+          const SizedBox(height: 16),
         ],
       ),
     );

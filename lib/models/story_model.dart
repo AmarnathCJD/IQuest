@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+
 class StoryEvent {
-  final String
-  type;
+  final String type;
   final String text;
   final String? character;
   final String? avatarKey;
@@ -26,6 +26,7 @@ class StoryEvent {
     );
   }
 }
+
 class StoryChoice {
   final int id;
   final String text;
@@ -56,6 +57,7 @@ class StoryChoice {
     );
   }
 }
+
 class StoryScenario {
   final String scenarioTitle;
   final List<StoryEvent> scene;
@@ -65,12 +67,14 @@ class StoryScenario {
   final Color moodColor;
   final String? ambientSound;
   final String sceneLocation;
-  final String? timePressure;
+  final int? timeConstraint;
   final int intensity;
   final String consequenceText;
   final String characterReaction;
   final String sdgFact;
   final bool realismMode;
+  final int currentSocialImpact;
+  final int currentResourceStability;
   final List<StoryChoice> choices;
   StoryScenario({
     required this.scenarioTitle,
@@ -81,12 +85,14 @@ class StoryScenario {
     required this.moodColor,
     this.ambientSound,
     required this.sceneLocation,
-    this.timePressure,
+    this.timeConstraint,
     required this.intensity,
     required this.consequenceText,
     required this.characterReaction,
     required this.sdgFact,
     required this.realismMode,
+    required this.currentSocialImpact,
+    required this.currentResourceStability,
     required this.choices,
   });
   bool get isFinal => currentLayer >= totalLayers;
@@ -102,12 +108,14 @@ class StoryScenario {
       moodColor: _parseHexColor(json['mood_color']),
       ambientSound: json['ambient_sound'],
       sceneLocation: json['scene_location'] ?? 'Unknown Location',
-      timePressure: json['time_pressure'],
+      timeConstraint: json['time_constraint'],
       intensity: json['intensity'] ?? 1,
       consequenceText: json['consequence_text'] ?? '',
       characterReaction: json['character_reaction'] ?? '',
       sdgFact: json['sdg_fact'] ?? '',
       realismMode: json['realism_mode'] ?? false,
+      currentSocialImpact: json['current_social_impact'] ?? 50,
+      currentResourceStability: json['current_resource_stability'] ?? 50,
       choices: (json['choices'] as List? ?? [])
           .map((c) => StoryChoice.fromJson(c))
           .toList(),
@@ -125,6 +133,7 @@ class StoryScenario {
     return const Color(0xFF4CAF50);
   }
 }
+
 class HistoryEntry {
   final String scenarioTitle;
   final String storyText;
@@ -140,6 +149,7 @@ class HistoryEntry {
     'choice_taken': choiceTaken,
   };
 }
+
 class ChoiceStat {
   final int choiceId;
   final String choiceText;
@@ -155,6 +165,7 @@ class ChoiceStat {
     count: json['count'] ?? 0,
   );
 }
+
 class ChoiceStatsResponse {
   final List<ChoiceStat> stats;
   ChoiceStatsResponse({required this.stats});
@@ -166,6 +177,7 @@ class ChoiceStatsResponse {
     );
   }
 }
+
 class SdgReport {
   final String headline;
   final int sdgAlignmentScore;
@@ -173,6 +185,8 @@ class SdgReport {
   final String summary;
   final List<String> whatYouCanDoIrl;
   final String shareableQuote;
+  final String? ambientSound;
+
   SdgReport({
     required this.headline,
     required this.sdgAlignmentScore,
@@ -180,7 +194,9 @@ class SdgReport {
     required this.summary,
     required this.whatYouCanDoIrl,
     required this.shareableQuote,
+    this.ambientSound,
   });
+
   factory SdgReport.fromJson(Map<String, dynamic> json) {
     return SdgReport(
       headline: json['headline'] ?? '',
@@ -189,6 +205,7 @@ class SdgReport {
       summary: json['summary'] ?? '',
       whatYouCanDoIrl: List<String>.from(json['what_you_can_do_irl'] ?? []),
       shareableQuote: json['shareable_quote'] ?? '',
+      ambientSound: json['ambient_sound'],
     );
   }
 }

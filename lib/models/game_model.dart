@@ -5,6 +5,7 @@ class Game {
   final String tagline;
   final String levelOverview;
   final List<GameCharacter> characters;
+  final String bgVid;
   Game({
     required this.id,
     required this.title,
@@ -12,6 +13,7 @@ class Game {
     required this.tagline,
     required this.levelOverview,
     required this.characters,
+    required this.bgVid,
   });
   factory Game.fromJson(Map<String, dynamic> json) {
     return Game(
@@ -23,9 +25,11 @@ class Game {
       characters: (json['characters'] as List? ?? [])
           .map((c) => GameCharacter.fromJson(c))
           .toList(),
+      bgVid: json['bg_vid'] ?? '',
     );
   }
 }
+
 class GameCharacter {
   final int id;
   final String name;
